@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>D3.js Demo</title>
+    <meta charset="UTF-8">
+    <style type="text/css">
+        .line {
+            fill: none;
+            stroke: steelblue;
+            stroke-width: 1.5px;
+        }
+
+        .zoom {
+            cursor: move;
+            fill: none;
+            pointer-events: all;
+        }
+    </style>
+
+    <!-- Add Needed Scripts: D3 and jQuery -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+</head>
+
+<body>
+    <svg width="960" height></svg>
+    <script type="module">
+        //Set up SVG size and margins
+        var margin = { top: 50, right: 50, bottom: 50, left: 50 },
+            width = 900 - (margin.left + margin.right),
+            height = 670 - (margin.top + margin.bottom);
+
+        function updateChart() {
+
+            // recover the new scale
+            var newX = d3.event.transform.rescaleX(x);
+            var newY = d3.event.transform.rescaleY(y);
+
+            // update axes with these new boundaries
+            xAxis.call(d3.axisBottom(newX))
+            yAxis.call(d3.axisLeft(newY))
+
+            // update circle position
+            scatter
+                .selectAll("circle")
+                .attr('cx', function (d) { return newX(d.Sepal_Length) })
+                .attr('cy', function (d) { return newY(d.Petal_Length) });
+        }
+
+        //Retrieve the JSON data
+        $.getJSON("https://jsonblob.com/api/1039328202555932672",
+            function (data) {
+                //Send Data through function
+                plotCO2Data(data);
+            });
+
+        //Executed once the file has downloaded
+        function plotCO2Data(data) {
+            //Create x and y scales for Interpolated value- Time (x-axis)
+            var parseDate = d3.timeParse("%Y-%d-%m");
+
+            //Set X 
+            var x = d3.scaleTime()
+                .domain(d3.extent(data, function (d) { return parseDate(d["Date"]); }))
+                .range([0, width]);
+
+            //Set Y
+            var y = d3.scaleLinear()
+                .domain(d3.extent(data, function (d) { return d["Interpolated"] }))
+                .range([height, 0]);
+
+            //Axes
+            // X is Time
+            var xAxis = d3.axisBottom(x)
+                .ticks(5);
+
+            // Y is Value
+            var yAxis = d3.axisLeft(y)
+                .ticks(5);
+
+            //Line
+            var valueLine = d3.line()
+                .x(function (d) { return x(parseDate(d["Date"])); })
+                .y(function (d) { return y(d["Interpolated"]); });
+
+            //Graph
+            var svg = d3.select('body')
+                .append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+
+                .append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+            svg.append('g')
+                .attr('class', 'x axis')
+                .attr("transform", "translate(0," + height + ")")
+                .call(xAxis);
+
+            svg.append('g')
+                .attr('class', 'y axis')
+                .call(yAxis);
+
+            svg.append("path")
+                .attr("d", valueLine(data))
+                .attr("fill", "none")
+                .attr("stroke", "red");
+
+            svg.append("text")
+                .attr("transform", "translate(350," + (height + 50) + ")")
+                .text("Time");
+
+            svg.append("text")
+                .attr("transform", "translate(-45, -15)")
+                .text("Value");
+
+            //Zoom
+            var zoom = d3.zoom()
+                .scaleExtent([.5, 20])  // This control how much you can unzoom (x0.5) and zoom (x20)
+                .extent([[0, 0], [width, height]])
+                .on("zoom", updateChart());
+
+            // This add an invisible rect on top of the chart area. This rect can recover pointer events: necessary to understand when the user zoom
+            SVG.append("rect")
+                .attr("width", width)
+                .attr("height", height)
+                .style("fill", "none")
+                .style("pointer-events", "all")
+                .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
+                .call(zoom);
+        }
+    </script>
+</body>
+
+</html>
