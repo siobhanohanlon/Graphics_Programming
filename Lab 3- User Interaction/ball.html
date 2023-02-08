@@ -1,0 +1,288 @@
+<!-- G00389108, Siobhan O Hanlon -->
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Canvas</title>
+
+  <style type="text/css">
+    body {
+      background-color: white;
+    }
+
+    canvas {
+      border: 5px solid black;
+    }
+  </style>
+  <script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+</head>
+
+<body>
+  <H4>Siobhan O Hanlon</H4>
+  <canvas id="canvas-for-ball" width="500" height="300"></canvas>
+
+  <script type="text/javascript">
+    //Variables
+    var x, y, r, ySpeed, xSpeed, turn, speed, gravity;
+    var noClicks = 0;
+
+    //Class
+    class DrawBall {
+      constructor(x, y, r, yS, xS, t, spd) {
+        this.x = x;
+        this.y = y;
+        this.r = r;
+        this.ySpeed = yS;
+        this.xSpeed = xS;
+        this.turn = t;
+        this.speed = spd;
+        this.gravity = 0.8;
+      }
+
+      rotate() {
+        this.turn -= this.speed;
+      }
+
+      rebound(){
+        //Update Variables
+        this.x += this.xSpeed;
+        this.y += this.ySpeed;
+        this.ySpeed += this.gravity;
+
+        //Ball hits floor
+        if(this.y > canvas.height - this.r){
+          //Reposition Ball to look like it rolls on ground
+          this.y = canvas.height - this.r;
+
+          //Change direction
+          this.ySpeed *= -0.7;
+        } 
+
+        //Make ball stop bouncing
+        if(this.ySpeed < 0 && this.ySpeed > -2){
+          this.ySpeed=0;
+        }
+                         
+        //do this otherwise ball never stops on xaxis
+        if(Math.abs(this.xSpeed) < 1.1){
+            this.xSpeed = 0;
+            this.speed /= 8;
+        }
+
+        //hits sides
+        if (this.x > canvas.width - this.r || this.x < this.r) {
+          //Change Ball Direction
+          this.xSpeed = this.xSpeed * -1;
+
+          //Change Spin Direction
+          this.speed *= -1;
+        }
+      }
+
+      xF(){
+        if(this.xSpeed > 0){
+          this.xSpeed -= 0.01;
+
+          if(this.speed > 0){
+            this.speed -= 0.09;
+          }
+        }
+
+        if(this.xSpeed < 0){
+          this.xSpeed += 0.01;
+        }
+      }
+
+      draw() {
+        // Draw the ball (stroked, not filled).
+        //Red Half
+        ctx.fillStyle = "rgb(150,0,0)";
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.r, 5 * Math.PI / 6 + this.turn, 11 * Math.PI / 6 + this.turn, this.direction);
+        ctx.lineWidth = this.r / 8;
+        ctx.fill();
+        ctx.stroke();
+
+        //White Half
+        ctx.fillStyle = "white";
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.r, 11 * Math.PI / 6 + this.turn, 5 * Math.PI / 6 + this.turn, this.direction);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.lineTo(this.x + (this.r * Math.cos(11 * Math.PI / 6 + this.turn)), this.y + this.r * Math.sin(11 * Math.PI / 6 + this.turn));
+        ctx.lineWidth = this.r / 8;
+        ctx.stroke();
+
+        //Center White Circle
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.r / 3, 0, 2 * Math.PI);
+        ctx.fillStyle = "white";
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.closePath();
+      }
+
+      move() {
+        if (this.y > canvas.height - this.r || this.y < this.r) {
+          //Change Ball Direction
+          this.ySpeed = this.ySpeed * -1;
+          
+          //Change Spin Direction
+          this.speed *= -1;
+        }
+
+        if (this.x > canvas.width - this.r || this.x < this.r) {
+          //Change Ball Direction
+          this.xSpeed = this.xSpeed * -1;
+
+          //Change Spin Direction
+          this.speed *= -1;
+        }
+
+        // Update the x,y location.
+        this.y += this.ySpeed;
+        this.x += this.xSpeed;
+      }
+    }//Close Class
+
+    // Gets a handle to the element with id canvasOne.
+    var canvas = document.getElementById("canvas-for-ball");
+
+    // Get a 2D context for the canvas.
+    var ctx = canvas.getContext("2d");
+    document.body.appendChild(canvas);
+
+    // Instances of Class drawBall
+    clickBall = new DrawBall(460, 100, 20, 3, 3, (Math.PI / 4), 0.12);
+    keyboardBall = new DrawBall(100, 150, 15, 0, 0, 0, 0);
+    controlBall = new DrawBall(350, 200, 25, 4, 5, (Math.PI / 4), 0.12);
+    gravityBall = new DrawBall(250, 18, 18, 2, 4, (Math.PI/4), 0.12);
+   
+
+    //Stop keyboardBall from spinning
+    keyboardBall.speed = 0;
+
+    // A function to repeat every time the animation loops.
+    function repeatme() {
+
+      //Clear Canvas each time
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      //Normal Ball
+      controlBall.draw();
+      controlBall.move();
+      controlBall.rotate();
+
+      //Mouse Click Ball
+      clickBall.draw();
+      clickBall.move();
+      clickBall.rotate();
+
+      //Keyoard Controlled Ball
+      keyboardBall.draw();
+      keyboardBall.move();
+      keyboardBall.rotate();
+
+      //Gravity Ball
+      gravityBall.draw();
+      gravityBall.rebound();
+      gravityBall.xF();
+      gravityBall.rotate();
+
+      window.requestAnimationFrame(repeatme);
+    }//End Repeat me
+
+    // Get the animation going.
+    repeatme();
+
+
+    //Lab3
+    //Mouse Events
+    //Use offset so it will draw at centre of mouse pointer
+    var canvasPosition = {
+      x: canvas.offsetLeft,
+      y: canvas.offsetTop
+    };
+
+    //Event listener
+    canvas.addEventListener("click", function (e) {
+      //Use clientX and clientY to get the mouse position relative to the browser window
+      var mouse = {
+        x: e.clientX - canvasPosition.x,
+        y: e.clientY - canvasPosition.y
+      }
+
+      noClicks += 1;
+      console.log(noClicks);
+
+      //Change clickBall position to mouse position
+      clickBall.x = mouse.x;
+      clickBall.y = mouse.y;
+    });
+
+    //Right Click
+    canvas.addEventListener("contextmenu", function (event){
+        //Disable Menu pop up
+        event.preventDefault();
+
+        var mouseR = {
+        x: event.clientX - canvasPosition.x,
+        y: event.clientY - canvasPosition.y
+        }
+
+        //Change clickBall position to mouse position
+        clickBall.x = mouseR.x;
+        clickBall.y = mouseR.y;
+    });
+
+    //Keyboard Events
+    //keypresses with jQuery
+    $(document.body).on('keydown', function(e) {
+      switch (e.which) {
+
+      //Left arrow
+      case 37:
+        keyboardBall.xSpeed -= 0.25;
+        break;
+
+      //Up Arrow
+      case 38:
+        keyboardBall.ySpeed -= 0.25;
+        break;
+        
+      //Right arrow
+      case 39:
+        keyboardBall.xSpeed += 0.25;
+        break;
+
+      //Down arrow
+      case 40:
+        keyboardBall.ySpeed += 0.25;
+        break;
+
+      //O Key to increase Spin
+      case 79:
+        keyboardBall.speed += .05;
+        break;
+
+      //P Key to decrease Spin
+      case 80:
+        keyboardBall.speed -= .05;
+        break;
+
+      //Space Key: Activate new Gravity Ball
+      case 32:
+        gravityBall.xSpeed = 4;
+        gravityBall.ySpeed = 2;
+        gravityBall.speed = 0.12;
+        gravityBall.x = (Math.random() * (canvas.width - gravityBall.r) + gravityBall.r);
+        gravityBall.y = (Math.random() * (canvas.height/2));
+        break;
+      }
+    });
+  </script>
+</body>
+</html>

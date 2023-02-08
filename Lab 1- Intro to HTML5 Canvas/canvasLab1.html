@@ -1,0 +1,86 @@
+<!--G00389108, Siobhan O Hanlon-->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Canvas</title>
+
+    <!-- CSS -->
+    <style type="text/css">
+
+      canvas{
+        border: 5px solid black;
+      }
+      text{
+        color: black;
+      }
+    </style>
+  </head>
+
+  <body>
+    <canvas id="canvasOne" width="500" height="500"></canvas>
+
+    <script type="text/javascript">
+
+    // Gets a handle to the element with id canvasOne.
+		var canvas = document.getElementById("canvasOne");
+
+		// Set the canvas up for drawing in 2D.
+		var ctx = canvas.getContext("2d");
+
+    // Set the fill colour to bright red.
+		ctx.fillStyle = "rgb(a, b, c)";
+    
+		// Create a filled rectangle 
+		ctx.fillRect(10, 10, 200, 120);
+
+    // Add Text
+    var text = canvas.getContext("2d");
+    text.font = "30px Arial";
+    text.fillStyle = "black";
+    text.fillText("Siobhan", 10, 200);
+
+    // Second Rectangle    
+    ctx.globalAlpha = 0.5;
+    ctx.fillStyle = "green";
+    ctx.fillRect(150, 10, 130, 80);
+
+    // Draw 2 Circles
+    ctx.beginPath();
+    ctx.arc(100, 300, 75, 0, 2 * Math.PI);
+    ctx.strokeStyle = "black";
+    ctx.stroke();
+    ctx.fillStyle = "yellow";
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(280, 280, 60, 0, 2 * Math.PI);
+    ctx.strokeStyle = "red";
+    ctx.stroke();
+    ctx.fillStyle = "grey";
+    ctx.fill();
+
+    // Circle inside Square
+    ctx.fillStyle = "rgb(25, 100, 90)";
+    ctx.fillRect(300, 10, 180, 180);
+    ctx.beginPath();
+    ctx.arc(390, 100, 90, 0, 2 * Math.PI);
+    ctx.strokeStyle = "black";
+    ctx.stroke();
+    ctx.fillStyle = "red";
+    ctx.fill();
+
+    //Draw Pacman
+    ctx.beginPath();
+    ctx.arc(370, 410, 80, 0.2 * Math.PI, 1.8 * Math.PI);
+    ctx.lineTo(370, 410);
+    ctx.closePath();
+    ctx.fillStyle = "#FF0";
+    ctx.fill();
+    ctx.strokeStyle = "black";
+    ctx.stroke();
+  
+    </script>
+  </body>
+</html>

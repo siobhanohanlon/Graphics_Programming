@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <style type="text/css"></style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.js"></script>
+</head>
+
+<body>
+    <script type="module">
+
+        // Import Orbit Controls
+        import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.121.1/examples/jsm/controls/OrbitControls.js';
+
+        //type="module"
+        //import * as THREE from 'three';
+        //src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.js"
+
+        //Variables
+        var scene, camera, renderer, spotLight, sphere, helper, sheet, box, stop = false;
+        var gravity, bounceHeight, bounceWidth, bounceDepth, controls, addColour = 0.01;
+
+        //Instantiate Scene
+        scene = new THREE.Scene();
+        //Set Up
+        function setUp() {
+
+
+            //Perspective Camera 
+            camera = new THREE.PerspectiveCamera(80, window.innerWidth / window.innerHeight, 1, 500);
+            camera.position.z = 90;
+            camera.position.y = 30;
+            camera.position.x = 30;
+            camera.lookAt(0, 0);
+            scene.add(camera);
+
+            //Renderer
+            renderer = new THREE.WebGLRenderer();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+
+            //Orbit Controls
+            controls = new OrbitControls(camera, renderer.domElement);
+
+            //Spotlight
+            spotLight = new THREE.SpotLight(0xffffff);
+            spotLight.position.set(0, 80, 0); //x, y , z
+
+            //Shadows
+            spotLight.castShadow = true;
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            scene.add(spotLight);
+
+            //Camera Helper
+            helper = new THREE.CameraHelper(spotLight.shadow.camera);
+            //scene.add(helper);
+
+            //Axis Helper
+            const axisHelper = new THREE.AxesHelper(100); //100- how long lines are
+            //scene.add(axisHelper);
+
+            //Create Cube & Plane
+            cube();
+            plane();
+        }
+
+        //Cube
+        function cube() {
+            //Create Cube
+            const cubeGeo = new THREE.BoxGeometry(50, 50, 50);
+            const cubeMat = new THREE.MeshBasicMaterial({ color: 'blue', opacity: 0.1, transparent: true });
+            box = new THREE.Mesh(cubeGeo, cubeMat);
+            box.position.y = 25;
+            box.position.x = 0;
+            box.position.z = 0;
+
+            //Make Variables to Cube Size
+            bounceHeight = box.geometry.parameters.height;
+            bounceWidth = (box.geometry.parameters.width / 2);
+            bounceDepth = (box.geometry.parameters.depth / 2);
+
+            //WireFrame
+            const wireFr = new THREE.EdgesGeometry(cubeGeo);
+            const wireFrame = new THREE.LineSegments(wireFr);
+            wireFrame.position.y = 25;
+
+            scene.add(box);
+            scene.add(wireFrame);
+        }
+
+        //Sphere Class
+        class Sphere {
+            constructor(radius, heightSegments, widthSegments, y, ySpd, xSpd, zSpd) {
+                this.r = radius;
+                this.hq = heightSegments;
+                this.wq = widthSegments;
+
+                this.xSpeed = xSpd
+                this.ySpeed = ySpd;
+                this.zSpeed = zSpd
+                this.gravity = 1.1;
+
+                //Sphere
+                const geometry = new THREE.SphereGeometry(this.r, this.hq, this.wq);
+                const material = new THREE.MeshLambertMaterial({ color: 'red' });
+                this.sphere = new THREE.Mesh(geometry, material);
+
+                const wireFrame = new THREE.WireframeGeometry(geometry);
+                const wFrame = new THREE.LineSegments(wireFrame);
+
+                this.sphere.add(wFrame);
+
+                this.sphere.position.y = y;
+            }
+
+            draw() {
+                //Sphere
+                this.sphere.castShadow = true;
+                scene.add(this.sphere);
+            }
+
+            move() {
+                if (stop == false) {
+                    if (this.ySpeed > 0) {
+                        //Change Positions
+                        this.sphere.position.y += this.ySpeed;
+                        this.sphere.position.x += this.xSpeed;
+                        this.sphere.position.z += this.zSpeed;
+                    }
+
+                    //Sphere Hits Top
+                    if (this.sphere.position.y >= bounceHeight - this.r) {
+                        this.ySpeed = -1;
+                    }
+
+                    //Faster on fall down
+                    if (this.ySpeed <= 0) {
+                        this.ySpeed *= this.gravity;
+                        this.sphere.position.y += this.ySpeed;
+
+                    }
+
+                    //Change Variables when Hits Bottom
+                    if (this.sphere.position.y <= this.r) {
+
+                        //In Act Gravity
+                        if (bounceHeight >= (this.r * 2)) {
+                            bounceHeight *= 0.8;
+                            this.ySpeed *= -1;
+                            this.ySpeed *= 0.7;
+                        }
+
+                        //Make Y and Z Axis Slow down
+                        else {
+                            this.xSpeed *= 0.9;
+                            this.zSpeed *= 0.9;
+                            stop = true;
+                        }
+
+                        //Reset Y Position
+                        this.sphere.position.y = this.r;
+                    }
+
+                    //Sphere Hits Sides
+                    if (this.sphere.position.x >= bounceWidth - this.r ||
+                        this.sphere.position.x <= -bounceWidth + this.r) {
+                        this.xSpeed *= -1;
+                    }
+
+                    //Sphere Hits Front/Back
+                    if (this.sphere.position.z >= bounceDepth - this.r ||
+                        this.sphere.position.z <= -(bounceDepth) + this.r) {
+                        this.zSpeed *= -1;
+                    }
+
+                    //Corners
+                    if (this.sphere.position.z > bounceDepth - this.r) {
+                        this.sphere.position.z = bounceDepth - this.r;
+                    }
+
+                    if (this.sphere.position.y > bounceHeight - this.r) {
+                        this.sphere.position.y = bounceHeight - this.r;
+                    }
+                }
+
+                if (stop == true) {
+                    this.sphere.position.y = this.r;
+                }
+
+
+            }
+
+            rotate() {
+                this.sphere.rotation.x += 0.01;
+                this.sphere.rotation.y += 0.01;
+            }
+        }
+
+        function plane() {
+            //Plane
+            const planeGeo = new THREE.PlaneGeometry(50, 50);
+            const planeMat = new THREE.MeshLambertMaterial({ color: 'blue' });
+            sheet = new THREE.Mesh(planeGeo, planeMat);
+            sheet.position.y = 0;
+            sheet.position.z = 0;
+            sheet.rotation.x = -(Math.PI / 2); //90 in Radians
+            sheet.receiveShadow = true;
+            scene.add(sheet);
+        }
+
+        //Instance of Sphere Class
+        let ball = new Sphere(8, 35, 16, 15, 0.5, 1, 0.8);
+
+        //Draw Scene
+        function repeatMe() {
+            ball.sphere.material.color.setHSL(addColour, 1, 0.5);
+            addColour += 0.001;
+
+            ball.draw();
+            ball.rotate();
+            ball.move();
+
+            renderer.render(scene, camera);
+            requestAnimationFrame(repeatMe);
+        }
+
+        //Call Functions
+        setUp();
+        repeatMe();
+
+        //WindowResize
+        window.addEventListener('resize', onWindowResize);
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+    </script>
+</body>
+
+</html>

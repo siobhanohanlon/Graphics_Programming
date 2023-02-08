@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Canvas</title>
+
+  <style type="text/css">
+    body {
+      background-color: white;
+    }
+
+    canvas {
+      border: 5px solid black;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Name -->
+  <h1>Siobhan</h1>
+
+  <canvas id="canvas-for-ball" width="500" height="300"></canvas>
+
+  <script type="text/javascript">
+    //Variables
+    var x, y, r, ySpeed, xSpeed, turn, direction;
+    var noClicks = 0;
+
+    //Class
+    class DrawBall {
+      constructor(x, y, r, yS, xS, t, dir) {
+        this.x = x;
+        this.y = y;
+        this.r = r;
+        this.ySpeed = yS;
+        this.xSpeed = xS;
+        this.turn = t;
+        this.direction = dir;
+      }
+
+      rotate() {
+        this.turn += 0.12;
+      }
+
+      draw() {
+        // Draw the ball (stroked, not filled).
+        //Red Half
+        ctx.fillStyle = "rgb(150,0,0)";
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.r, 5 * Math.PI / 6 + this.turn, 11 * Math.PI / 6 + this.turn, this.direction);
+        ctx.lineWidth = this.r / 8;
+        ctx.fill();
+        ctx.stroke();
+
+        //White Half
+        ctx.fillStyle = "white";
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.r, 11 * Math.PI / 6 + this.turn, 5 * Math.PI / 6 + this.turn, this.direction);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.lineTo(this.x + (this.r * Math.cos(11 * Math.PI / 6 + this.turn)), this.y + this.r * Math.sin(11 * Math.PI / 6 + this.turn));
+        ctx.lineWidth = this.r / 8;
+        ctx.stroke();
+
+        //Center White Circle
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.r / 3, 0, 2 * Math.PI);
+        ctx.fillStyle = "white";
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.closePath();
+      }
+
+      move() {
+        //hits top/bottom
+        if (this.y > canvas.height - this.r || this.y < this.r) {
+          //Change Direction
+          this.ySpeed = this.ySpeed * -1;
+
+          //Change Spin Direction
+          if (this.direction == true) {
+            this.direction = false;
+          }
+
+          else {
+            this.direction = true
+          }
+        }
+
+        //hits sides
+        if (this.x > canvas.width - this.r || this.x < this.r) {
+          //Change Direction
+          this.xSpeed = this.xSpeed * -1;
+
+          //Change Spin Direction
+          if (this.direction == true) {
+            this.direction = false;
+          }
+
+          else {
+            this.direction = true
+          }
+        }
+
+        // Update the x,y location.
+        this.y += this.ySpeed;
+        this.x += this.xSpeed;
+      }
+    }//Close Class
+
+    // Gets a handle to the element with id canvasOne.
+    var canvas = document.getElementById("canvas-for-ball");
+
+    // Get a 2D context for the canvas.
+    var ctx = canvas.getContext("2d");
+    document.body.appendChild(canvas);
+
+    // Instances of Class drawBall
+    ball1 = new DrawBall(50, 20, 20, 3, 3, (Math.PI / 4), false);
+
+    // A function to repeat every time the animation loops.
+    function repeatme() {
+
+      //Clear Canvas each time
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      //Use Class Functions to Draw and Move Ball
+      ball1.draw();
+      ball1.move();
+      ball1.rotate();
+
+      window.requestAnimationFrame(repeatme);
+    }//End Repeat me
+
+    // Get the animation going.
+    repeatme();
+  </script>
+</body>
+</html>
